@@ -14,7 +14,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 # Initialize Groq client
-client = Groq(api_key="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")
+client = Groq(api_key=Groq_API)
 
 # Constants
 LLAMA_3_2_VISION_11B = 'llama-3.2-90b-vision-preview'

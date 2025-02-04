@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   AppBar,
   Box,
@@ -94,6 +94,8 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://privalert-backend.vercel.app';
+
 function App() {
   const [file, setFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -107,6 +109,26 @@ function App() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(`${API_URL}/health`);
+        if (!response.ok) {
+          throw new Error('Backend health check failed');
+        }
+      } catch (error) {
+        console.error('Backend health check failed:', error);
+        setSnackbar({
+          open: true,
+          message: 'Warning: Backend service may be unavailable',
+          severity: 'warning'
+        });
+      }
+    };
+
+    checkBackendHealth();
+  }, []);
 
   const handleFileChange = useCallback((event) => {
     const selectedFile = event.target.files[0];
@@ -137,13 +159,14 @@ function App() {
     formData.append('prompt', prompt);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/analyze', {
+      const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process the image.');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process the image');
       }
 
       const data = await response.json();
@@ -152,7 +175,11 @@ function App() {
       setSnackbar({ open: true, message: 'Analysis completed successfully!', severity: 'success' });
     } catch (error) {
       console.error('Error:', error);
-      setSnackbar({ open: true, message: 'An error occurred while processing the image.', severity: 'error' });
+      setSnackbar({ 
+        open: true, 
+        message: `Error: ${error.message || 'An error occurred while processing the image'}`, 
+        severity: 'error' 
+      });
     } finally {
       setIsLoading(false);
     }
@@ -337,4 +364,3 @@ function App() {
 }
 
 export default App;
-

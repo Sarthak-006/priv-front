@@ -28,6 +28,8 @@ import {
   Description,
   PrivacyTip,
   Refresh,
+  Error,
+  CheckCircle,
 } from '@mui/icons-material';
 
 const theme = createTheme({
@@ -95,6 +97,14 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://privalert-backend.vercel.app';
+
+const AnalysisResult = styled(Box)(({ theme, haspii }) => ({
+  padding: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: haspii === 'true' ? 'rgba(255, 0, 0, 0.1)' : 'rgba(0, 255, 0, 0.1)',
+  border: `1px solid ${haspii === 'true' ? theme.palette.error.main : theme.palette.success.main}`,
+  marginTop: theme.spacing(2)
+}));
 
 function App() {
   const [file, setFile] = useState(null);
@@ -339,15 +349,31 @@ function App() {
                   <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                     <PrivacyTip sx={{ mr: 1 }} /> Privacy Analysis
                   </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: analysis.includes('No PII Detected') ? 'success.main' : 'error.main',
-                      fontWeight: 'medium',
-                    }}
-                  >
-                    {analysis}
-                  </Typography>
+                  <AnalysisResult haspii={String(analysis.toLowerCase().includes('pii detected'))}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      {analysis.toLowerCase().includes('pii detected') ? (
+                        <Error color="error" sx={{ mr: 1 }} />
+                      ) : (
+                        <CheckCircle color="success" sx={{ mr: 1 }} />
+                      )}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: analysis.toLowerCase().includes('pii detected') 
+                            ? 'error.main' 
+                            : 'success.main',
+                          fontWeight: 'medium',
+                        }}
+                      >
+                        {analysis.toLowerCase().includes('pii detected') 
+                          ? 'PII Detected!' 
+                          : 'No PII Detected'}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body1">
+                      {analysis}
+                    </Typography>
+                  </AnalysisResult>
                 </StyledPaper>
               )}
             </Grid>
@@ -364,3 +390,4 @@ function App() {
 }
 
 export default App;
+
